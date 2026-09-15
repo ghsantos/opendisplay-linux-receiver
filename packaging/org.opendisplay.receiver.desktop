@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OpenDisplay Receiver
+Comment=Use this machine as a display for an OpenDisplay sender
+Exec=opendisplay-receiver
+Icon=org.opendisplay.receiver
+Terminal=false
+Categories=Utility;Network;
+Keywords=display;monitor;extend;
