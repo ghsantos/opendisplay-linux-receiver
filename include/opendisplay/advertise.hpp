@@ -15,8 +15,8 @@ namespace od {
 
 /// Publishes `_opensidecar._tcp` via Avahi so senders can discover this
 /// receiver on WiFi (protocol section 2.1). Runs Avahi's simple-poll loop on
-/// a dedicated thread; name changes and shutdown are applied through the
-/// poll's prepare callback so every Avahi call stays on its own thread.
+/// a dedicated thread; name changes and shutdown are applied between
+/// poll iterations so every Avahi call stays on its own thread.
 ///
 /// Absence of the daemon is not fatal: AVAHI_CLIENT_NO_FAIL keeps the client
 /// retrying, and senders can still reach this receiver by address.
@@ -44,7 +44,6 @@ private:
     void publish();           // poll thread: (re)create the entry group
     void unpublish();         // poll thread
 
-    static void prepareCallback(AvahiSimplePoll* poll, int timeout, void* userdata);
     static void clientCallback(AvahiClient* client, int state, void* userdata);
     static void entryGroupCallback(AvahiEntryGroup* group, int state, void* userdata);
 

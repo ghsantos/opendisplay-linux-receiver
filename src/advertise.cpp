@@ -64,7 +64,6 @@ void AvahiAdvertiser::run() {
         emit errorOccurred(QStringLiteral("cannot create Avahi poll"));
         return;
     }
-    avahi_simple_poll_set_prepare_func(poll_, prepareCallback, this);
     int error = 0;
     client_ = avahi_client_new(avahi_simple_poll_get(poll_), AVAHI_CLIENT_NO_FAIL,
                                reinterpret_cast<AvahiClientCallback>(clientCallback),
@@ -76,7 +75,12 @@ void AvahiAdvertiser::run() {
         poll_ = nullptr;
         return;
     }
-    avahi_simple_poll_loop(poll_);
+    for (;;) {
+        applyPending();
+        if (avahi_simple_poll_iterate(poll_, -1) != 0) {
+            break;
+        }
+    }
     unpublish();
     avahi_client_free(client_);
     client_ = nullptr;
@@ -107,7 +111,8 @@ void AvahiAdvertiser::publish() {
         return;
     }
     unpublish();
-    group_ = avahi_entry_group_new(client_, entryGroupCallback, this);
+    group_ = avahi_entry_group_new(
+        client_, reinterpret_cast<AvahiEntryGroupCallback>(entryGroupCallback), this);
     if (group_ == nullptr) {
         emit errorOccurred(QStringLiteral("Avahi entry group failed: %1")
                                .arg(QString::fromUtf8(
@@ -142,10 +147,6 @@ void AvahiAdvertiser::unpublish() {
         std::lock_guard lock(mutex_);
         publishedName_.clear();
     }
-}
-
-void AvahiAdvertiser::prepareCallback(AvahiSimplePoll*, int, void* userdata) {
-    static_cast<AvahiAdvertiser*>(userdata)->applyPending();
 }
 
 void AvahiAdvertiser::clientCallback(AvahiClient* client, const int state,
